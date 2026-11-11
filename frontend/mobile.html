@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Banking App — Cardless Cash Out</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Mobile Handset Mockup Container -->
+    <div class="w-full max-w-sm bg-slate-900 border-4 border-slate-700 rounded-[40px] shadow-2xl overflow-hidden flex flex-col relative min-h-[640px]">
+        
+        <!-- Mobile Speaker Notch -->
+        <div class="w-28 h-4 bg-slate-800 rounded-b-xl mx-auto flex items-center justify-center">
+            <div class="w-10 h-1 bg-slate-700 rounded-full"></div>
+        </div>
+
+        <!-- App Header -->
+        <div class="px-5 pt-3 pb-4 border-b border-slate-800/80 flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-xs text-white">Campus Pay</h2>
+                    <p class="text-[10px] text-blue-400 font-mono">Savings A/C •••• 3210</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 block">Available Balance</span>
+                <span id="userBalance" class="text-sm font-extrabold text-emerald-400">₹15,000.00</span>
+            </div>
+        </div>
+
+        <!-- Main Screen Content Area -->
+        <div id="mobileContent" class="p-5 flex-1 flex flex-col justify-between space-y-4">
+
+            <!-- HOME VIEW -->
+            <div id="mobileHomeView" class="space-y-4">
+                
+                <!-- Quick Cardless ATM Banner -->
+                <div class="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 p-4 rounded-2xl border border-blue-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-blue-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Emergency Cash Mode
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-mono">Cardless</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-snug">
+                        Left your ATM card behind? Walk up to any campus ATM, tap "Payment by Scan", and scan the QR below.
+                    </p>
+                </div>
+
+                <!-- Primary Action: Scan & Withdraw -->
+                <button onclick="startWithdrawalFlow()" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 transition transform active:scale-95 flex items-center justify-center gap-2.5 text-sm">
+                    <i class="fa-solid fa-qrcode text-base"></i> Scan ATM QR & Cash Out
+                </button>
+
+                <!-- Security & 2FA Settings Card -->
+                <div class="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-face-smile text-purple-400 text-lg"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Face Recognition 2FA</h4>
+                                <p class="text-[10px] text-slate-400">Require selfie match for cash</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="toggleFaceAuth" type="checkbox" onchange="toggleFaceAuthSetting(this.checked)" class="sr-only peer" checked>
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Enrolled Face Status -->
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                        <span id="faceStatusBadge" class="text-[11px] text-slate-400">
+                            Face ID: <span class="text-emerald-400 font-semibold">Ready</span>
+                        </span>
+                        <button onclick="openFaceEnrollModal()" class="text-[11px] text-purple-400 hover:text-purple-300 font-semibold underline">
+                            Re-enroll Face
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Default Credentials Helper Card -->
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <div class="font-semibold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-key text-amber-400"></i> Testing Credentials:
+                    </div>
+                    <div>Default MPIN: <span class="font-mono text-white font-bold">1234</span></div>
+                    <div>Account: <span class="font-mono text-white font-bold">Abhishek Sharma</span></div>
+                </div>
+
+            </div>
+
+            <!-- STEP 1: QR SCANNER VIEW -->
+            <div id="mobileScannerView" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-camera"></i> Point Camera at ATM Screen
+                    </h3>
+                    <button onclick="cancelFlow()" class="text-xs text-rose-400">Cancel</button>
+                </div>
+
+                <!-- Video Scanner Viewfinder -->
+                <div id="qrReaderContainer" class="rounded-2xl overflow-hidden bg-black relative border-2 border-dashed border-blue-500/50 min-h-[220px]">
+                    <div id="qr-reader" class="w-full"></div>
+                </div>
+
+                <!-- Convenient Quick-Scan Button for single-laptop testing -->
+                <div class="p-3 bg-blue-950/60 rounded-xl border border-blue-500/30 text-center space-y-2">
+                    <span class="text-[11px] text-blue-300 block">Testing on a single PC without second camera?</span>
+                    <button onclick="simulateScanFromActiveATM()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow transition">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-Detect Active ATM QR
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: VERIFICATION & 2FA AUTHENTICATION VIEW -->
+            <div id="mobileAuthView" class="hidden space-y-4">
+                <div class="text-center">
+                    <span class="text-[10px] uppercase font-mono text-emerald-400 block">ATM Withdrawal Request</span>
+                    <h3 id="authAmountDisplay" class="text-2xl font-black text-white">₹500</h3>
+                    <p id="authAtmLocation" class="text-[11px] text-slate-400 font-mono">Terminal: ATM_CAMPUS_01</p>
+                </div>
+
+                <!-- Factor 1: MPIN Input -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-medium block">Enter 4-Digit MPIN (Factor 1)</label>
+                    <input id="mpinInput" type="password" maxlength="4" placeholder="••••" class="w-full text-center py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-lg tracking-widest text-white font-mono focus:outline-none focus:border-blue-500" />
+                </div>
+
+                <!-- Factor 2: Live Face Selfie Camera (if enabled) -->
+                <div id="faceScanSection" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs text-purple-300 font-medium flex items-center gap-1.5">
+                            <i class="fa-solid fa-face-smile"></i> Face Biometric (Factor 2)
+                        </label>
+                        <span class="text-[10px] text-emerald-400">Required</span>
+                    </div>
+
+                    <!-- Live Selfie Preview Frame -->
+                    <div class="relative w-full h-36 bg-black rounded-xl overflow-hidden border border-purple-500/40 flex items-center justify-center">
+                        <video id="selfieVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                        <canvas id="selfieCanvas" class="hidden"></canvas>
+                        <img id="selfiePreviewImg" class="hidden w-full h-full object-cover" />
+                        
+                        <!-- Face Oval Overlay -->
+                        <div id="faceOvalGuide" class="absolute inset-4 border-2 border-dashed border-purple-400/70 rounded-full pointer-events-none"></div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="captureSelfie()" class="flex-1 py-1.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-xs font-semibold rounded-lg border border-purple-500/40">
+                            <i class="fa-solid fa-camera mr-1"></i> Capture Selfie
+                        </button>
+                        <button onclick="useQuickPassFace()" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg">
+                            Use Enrolled Face
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Withdrawal Button -->
+                <button id="btnAuthorize" onclick="submitAuthorization()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition">
+                    Authorize & Dispense Cash
+                </button>
+                <button onclick="cancelFlow()" class="w-full text-center text-xs text-slate-400 hover:text-slate-300">
+                    Cancel
+                </button>
+            </div>
+
+            <!-- STEP 3: SUCCESS VIEW -->
+            <div id="mobileSuccessView" class="hidden text-center space-y-4 py-6">
+                <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl animate-bounce">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Withdrawal Authorized!</h3>
+                    <p class="text-xs text-slate-400 mt-1">Please collect your cash from the ATM tray.</p>
+                </div>
+
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
+                    <div class="flex justify-between"><span>Amount Debited:</span><span id="succAmount" class="font-bold text-emerald-400">₹500</span></div>
+                    <div class="flex justify-between"><span>New Balance:</span><span id="succBalance">₹14,500</span></div>
+                    <div class="flex justify-between"><span>Transaction ID:</span><span id="succTxId" class="text-blue-400">TXN_987</span></div>
+                </div>
+
+                <button onclick="cancelFlow()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl">
+                    Back to Wallet
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Mobile Navigation Bottom Bar -->
+        <div class="border-t border-slate-800/80 px-6 py-2.5 flex justify-around text-slate-500 text-xs">
+            <div class="text-blue-400 flex flex-col items-center"><i class="fa-solid fa-house"></i><span class="text-[9px]">Home</span></div>
+            <div class="flex flex-col items-center"><i class="fa-solid fa-clock-rotate-left"></i><span class="text-[9px]">History</span></div>
+            <div class="flex flex-col items-center"><i class="fa-solid fa-shield"></i><span class="text-[9px]">Security</span></div>
+        </div>
+
+    </div>
+
+    <!-- Face Enrollment Modal (Webcam Capture) -->
+    <div id="faceEnrollModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm text-white">Register Face Biometric</h3>
+                <button onclick="closeFaceEnrollModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Position your face in front of the camera and click capture.</p>
+            
+            <div class="relative w-full h-48 bg-black rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                <video id="enrollVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <canvas id="enrollCanvas" class="hidden"></canvas>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="captureAndEnrollFace()" class="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow">
+                    Capture & Save
+                </button>
+                <button onclick="closeFaceEnrollModal()" class="py-2.5 px-4 bg-slate-800 text-slate-300 text-xs rounded-xl">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let activeSession = null;
+        let html5QrScanner = null;
+        let selfieStream = null;
+        let enrollStream = null;
+        let capturedSelfieB64 = null;
+
+        // Fetch User Profile on load
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/user/profile');
+                currentUser = await res.json();
+                document.getElementById('userBalance').textContent = `₹${currentUser.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('toggleFaceAuth').checked = currentUser.face_auth_enabled;
+                document.getElementById('faceStatusBadge').innerHTML = currentUser.has_face_enrolled 
+                    ? `Face ID: <span class="text-emerald-400 font-semibold">Ready</span>` 
+                    : `Face ID: <span class="text-rose-400 font-semibold">Not Enrolled</span>`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        loadProfile();
+
+        // Toggle Face 2FA Setting
+        async function toggleFaceAuthSetting(enabled) {
+            try {
+                const res = await fetch('/api/user/toggle-face-auth', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ enabled: enabled })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail);
+                    document.getElementById('toggleFaceAuth').checked = !enabled;
+                    return;
+                }
+                currentUser.face_auth_enabled = enabled;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Start Withdrawal Flow
+        function startWithdrawalFlow() {
+            showMobileView('mobileScannerView');
+            initCameraScanner();
+        }
+
+        function cancelFlow() {
+            stopCameraStreams();
+            if (html5QrScanner) {
+                try { html5QrScanner.clear(); } catch(e) {}
+            }
+            activeSession = null;
+            capturedSelfieB64 = null;
+            document.getElementById('mpinInput').value = '';
+            showMobileView('mobileHomeView');
+            loadProfile();
+        }
+
+        function showMobileView(viewId) {
+            ['mobileHomeView', 'mobileScannerView', 'mobileAuthView', 'mobileSuccessView'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // Initialize Live Camera QR Scanner
+        function initCameraScanner() {
+            html5QrScanner = new Html5QrcodeScanner("qr-reader", { 
+                fps: 10, 
+                qrbox: { width: 180, height: 180 },
+                aspectRatio: 1.0
+            });
+            html5QrScanner.render(onScanSuccess, onScanError);
+        }
+
+        function onScanError(err) {
+            // Silence normal frame errors
+        }
+
+        async function onScanSuccess(decodedText) {
+            if (html5QrScanner) {
+                try { html5QrScanner.clear(); } catch(e) {}
+            }
+            try {
+                let sessionId = null;
+                try {
+                    const parsed = JSON.parse(decodedText);
+                    sessionId = parsed.sid || parsed.session_id;
+                } catch(e) {
+                    sessionId = decodedText.trim();
+                }
+                await verifyAndLoadSession(sessionId);
+            } catch (err) {
+                alert("Unrecognized QR Code format.");
+            }
+        }
+
+        // Auto-Detect Active ATM QR (for single-PC demo)
+        async function simulateScanFromActiveATM() {
+            try {
+                // Fetch most recent transactions or check active session from ATM
+                const res = await fetch('/api/transactions');
+                // Or directly query database/session
+                // Let's ask server for the latest pending session
+                const sessionRes = await fetch('/api/atm/session/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ atm_code: 'ATM_CAMPUS_01', amount: 500 })
+                });
+                const sessionData = await sessionRes.json();
+                await verifyAndLoadSession(sessionData.session_id);
+            } catch (err) {
+                console.error(err);
+                alert("Could not automatically connect to ATM. Please make sure the ATM has generated a QR code.");
+            }
+        }
+
+        async function verifyAndLoadSession(sessionId) {
+            try {
+                const res = await fetch(`/api/mobile/verify-session?session_id=${sessionId}`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail);
+                    cancelFlow();
+                    return;
+                }
+
+                activeSession = data;
+                document.getElementById('authAmountDisplay').textContent = `₹${data.amount.toLocaleString('en-IN')}`;
+                document.getElementById('authAtmLocation').textContent = `${data.location} (${data.atm_code})`;
+
+                // Show/hide Face Section based on setting
+                if (data.face_auth_required) {
+                    document.getElementById('faceScanSection').classList.remove('hidden');
+                    startSelfieCamera();
+                } else {
+                    document.getElementById('faceScanSection').classList.add('hidden');
+                }
+
+                showMobileView('mobileAuthView');
+            } catch (err) {
+                console.error(err);
+                alert("Session verification failed.");
+            }
+        }
+
+        // --- Selfie Camera for Live Verification ---
+        async function startSelfieCamera() {
+            try {
+                selfieStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('selfieVideo');
+                video.srcObject = selfieStream;
+                document.getElementById('selfiePreviewImg').classList.add('hidden');
+                video.classList.remove('hidden');
+            } catch (err) {
+                console.warn("Webcam not available:", err);
+            }
+        }
+
+        function captureSelfie() {
+            const video = document.getElementById('selfieVideo');
+            const canvas = document.getElementById('selfieCanvas');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedSelfieB64 = canvas.toDataURL('image/jpeg');
+
+            const preview = document.getElementById('selfiePreviewImg');
+            preview.src = capturedSelfieB64;
+            preview.classList.remove('hidden');
+            video.classList.add('hidden');
+        }
+
+        function useQuickPassFace() {
+            // For testing convenience when camera is not permitted: use enrolled face as selfie
+            if (currentUser && currentUser.has_face_enrolled) {
+                capturedSelfieB64 = "SAME_AS_PROFILE";
+                alert("Simulated: Live selfie matched against enrolled profile!");
+            } else {
+                alert("Please click 'Re-enroll Face' to save a face photo first.");
+            }
+        }
+
+        // --- Submit 2FA Authorization ---
+        async function submitAuthorization() {
+            const pin = document.getElementById('mpinInput').value;
+            if (!pin || pin.length < 4) {
+                alert("Please enter your 4-digit MPIN.");
+                return;
+            }
+
+            if (activeSession.face_auth_required && !capturedSelfieB64) {
+                alert("Please capture your live selfie for facial verification!");
+                return;
+            }
+
+            const btn = document.getElementById('btnAuthorize');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying 2FA...`;
+
+            try {
+                const res = await fetch('/api/mobile/authorize-withdrawal', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: activeSession.session_id,
+                        pin: pin,
+                        live_face_b64: capturedSelfieB64
+                    })
+                });
+                const data = await res.json();
+                btn.disabled = false;
+                btn.innerHTML = `Authorize & Dispense Cash`;
+
+                if (!res.ok) {
+                    alert(data.detail || "Authentication Failed");
+                    return;
+                }
+
+                // Show Success
+                document.getElementById('succAmount').textContent = `₹${data.amount.toLocaleString('en-IN')}`;
+                document.getElementById('succBalance').textContent = `₹${data.remaining_balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('succTxId').textContent = data.transaction_id;
+                showMobileView('mobileSuccessView');
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = `Authorize & Dispense Cash`;
+                console.error(err);
+                alert("Network error communicating with banking server.");
+            }
+        }
+
+        // --- Face Enrollment Modal ---
+        async function openFaceEnrollModal() {
+            document.getElementById('faceEnrollModal').classList.remove('hidden');
+            try {
+                enrollStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                document.getElementById('enrollVideo').srcObject = enrollStream;
+            } catch (err) {
+                console.warn(err);
+            }
+        }
+
+        function closeFaceEnrollModal() {
+            if (enrollStream) {
+                enrollStream.getTracks().forEach(t => t.stop());
+                enrollStream = null;
+            }
+            document.getElementById('faceEnrollModal').classList.add('hidden');
+        }
+
+        async function captureAndEnrollFace() {
+            const video = document.getElementById('enrollVideo');
+            const canvas = document.getElementById('enrollCanvas');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg');
+
+            try {
+                const res = await fetch('/api/user/enroll-face', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ face_b64: b64 })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail);
+                    return;
+                }
+                alert(data.message);
+                closeFaceEnrollModal();
+                loadProfile();
+            } catch (err) {
+                console.error(err);
+                alert("Error registering face.");
+            }
+        }
+
+        function stopCameraStreams() {
+            if (selfieStream) {
+                selfieStream.getTracks().forEach(t => t.stop());
+                selfieStream = null;
+            }
+            if (enrollStream) {
+                enrollStream.getTracks().forEach(t => t.stop());
+                enrollStream = null;
+            }
+        }
+    </script>
+</body>
+</html>

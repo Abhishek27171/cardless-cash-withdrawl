@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardless Cash Withdrawal — B.Tech Project Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+    <!-- Top Nav -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight text-white">Cardless Cash Withdrawal</h1>
+                    <p class="text-xs text-emerald-400 font-medium">B.Tech 2nd-Year Project • Dynamic QR & 2FA Biometric ATM</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/atm" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-emerald-500/25 transition flex items-center gap-2">
+                    <i class="fa-solid fa-vault"></i> Open ATM Screen
+                </a>
+                <a href="/mobile" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-blue-500/25 transition flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen"></i> Open Mobile App
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10 space-y-12">
+        <!-- Hero Section -->
+        <section class="text-center max-w-3xl mx-auto space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Secure Dual-Factor Authentication (MPIN + Face Biometric)
+            </div>
+            <h2 class="text-4xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+                Emergency Cash Access <br/><span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Without a Physical Card</span>
+            </h2>
+            <p class="text-slate-400 text-base leading-relaxed">
+                Inspired by metro QR ticketing, this system allows students and users in emergencies to withdraw cash using a secure, time-bounded dynamic QR code (60s TTL) with MPIN and OpenCV Face Verification.
+            </p>
+        </section>
+
+        <!-- Quick Launch Action Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card 1: ATM -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800/80 p-8 rounded-2xl border border-slate-700/60 shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition text-emerald-400 text-8xl">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">1. The ATM Machine Kiosk</h3>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                    Selects amount, generates a dynamic HMAC-signed QR code valid for only 60 seconds (max 3 regenerations), and dispenses cash in real time via WebSockets when approved.
+                </p>
+                <a href="/atm" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300">
+                    Launch ATM Screen <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Card 2: Mobile -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800/80 p-8 rounded-2xl border border-slate-700/60 shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition text-blue-400 text-8xl">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl mb-4">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">2. The Mobile Banking App</h3>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                    Scans the ATM QR using the phone camera, prompts for a 4-digit MPIN, and conducts a live facial recognition match using computer vision before authorizing the debit.
+                </p>
+                <a href="/mobile" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300">
+                    Launch Mobile App <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Academic Subjects Mapping (For B.Tech Viva) -->
+        <section class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 space-y-6">
+            <div>
+                <h3 class="text-2xl font-bold text-white mb-1">Academic Subjects & Concepts Applied</h3>
+                <p class="text-sm text-slate-400">Use this breakdown during college viva, evaluations, and project reports:</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/40">
+                    <div class="text-emerald-400 font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> Cryptography & Sec (CNS)
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside">
+                        <li>HMAC-SHA256 signature verification</li>
+                        <li>Nonces to prevent Replay Attacks</li>
+                        <li>Time-To-Live (60s dynamic expiry)</li>
+                        <li>Session rate-limiting (Max 3 attempts)</li>
+                    </ul>
+                </div>
+                <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/40">
+                    <div class="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired"></i> Networks & Real-Time (CN)
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside">
+                        <li>Full-duplex WebSockets (<code class="text-emerald-400">/ws/atm</code>)</li>
+                        <li>Client-Server REST APIs (FastAPI)</li>
+                        <li>Real-time event push to ATM screen</li>
+                        <li>Low-latency handshake</li>
+                    </ul>
+                </div>
+                <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/40">
+                    <div class="text-purple-400 font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-eye"></i> Computer Vision & AI (CV)
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside">
+                        <li>OpenCV Haar Cascade Face Detection</li>
+                        <li>Histogram equalization & preprocessing</li>
+                        <li>Normalized cross-correlation comparison</li>
+                        <li>Toggleable 2FA Biometric authentication</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Audit Ledger -->
+        <section class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 space-y-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Live Transaction Ledger (DBMS Audit)</h3>
+                    <p class="text-xs text-slate-400">ACID-compliant records of cardless cash withdrawals</p>
+                </div>
+                <button onclick="fetchTransactions()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300 border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate"></i> Refresh Ledger
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-800/80 text-xs uppercase text-slate-400 border-b border-slate-700">
+                        <tr>
+                            <th class="px-4 py-3">Txn ID</th>
+                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">ATM Terminal</th>
+                            <th class="px-4 py-3">Amount</th>
+                            <th class="px-4 py-3">Face 2FA</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txTableBody" class="divide-y divide-slate-800">
+                        <tr>
+                            <td colspan="7" class="px-4 py-6 text-center text-slate-500">No transactions recorded yet. Complete your first withdrawal using the ATM & Mobile App!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function fetchTransactions() {
+            try {
+                const res = await fetch('/api/transactions');
+                const data = await res.json();
+                const tbody = document.getElementById('txTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No transactions recorded yet. Complete a withdrawal via ATM & Mobile app!</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.map(tx => `
+                    <tr class="hover:bg-slate-800/40">
+                        <td class="px-4 py-3 font-mono font-semibold text-emerald-400">${tx.tx_id}</td>
+                        <td class="px-4 py-3">${tx.user}</td>
+                        <td class="px-4 py-3 font-mono text-xs">${tx.atm}</td>
+                        <td class="px-4 py-3 font-bold text-white">₹${tx.amount.toLocaleString('en-IN')}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded text-xs ${tx.face_verified ? 'bg-purple-900/60 text-purple-300 border border-purple-500/30' : 'bg-slate-800 text-slate-400'}">
+                                ${tx.face_verified ? '✓ Verified' : 'Disabled'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded text-xs bg-emerald-900/60 text-emerald-300 border border-emerald-500/30">
+                                ${tx.status}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-slate-400">${tx.timestamp}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        fetchTransactions();
+        setInterval(fetchTransactions, 5000);
+    </script>
+</body>
+</html>
+

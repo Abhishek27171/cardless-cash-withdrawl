@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM Terminal — Cardless QR Withdrawal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .bill-animation {
+            animation: dispenseBill 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes dispenseBill {
+            0% { transform: translateY(60px) scale(0.9); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-20px) scale(1); opacity: 1; }
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="bg-neutral-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Physical ATM Kiosk Outer Frame -->
+    <div class="w-full max-w-4xl bg-neutral-900 border-4 border-neutral-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border-t-8 border-t-emerald-600">
+        
+        <!-- Left Side: Main ATM Screen -->
+        <div class="flex-1 p-6 md:p-8 flex flex-col justify-between bg-slate-950 relative min-h-[580px]">
+            <!-- ATM Header -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-extrabold text-sm tracking-wide text-white uppercase">Campus Smart Bank ATM</h2>
+                        <p class="text-[11px] text-slate-400 font-mono">Terminal: ATM_CAMPUS_01 • Block A</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-xs font-mono text-emerald-400">ONLINE</span>
+                </div>
+            </div>
+
+            <!-- ATM Dynamic Content Area -->
+            <div id="screenContainer" class="py-6 flex-1 flex flex-col justify-center items-center">
+                
+                <!-- VIEW 1: Idle Welcome Screen -->
+                <div id="viewWelcome" class="text-center space-y-6 w-full max-w-md">
+                    <div class="w-20 h-20 mx-auto rounded-2xl bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-4xl shadow-lg shadow-emerald-500/10">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-white">Cardless Cash Withdrawal</h3>
+                        <p class="text-slate-400 text-sm mt-1">Forgot your ATM card? Withdraw cash instantly using your mobile banking app & dynamic QR.</p>
+                    </div>
+                    
+                    <button onclick="goToAmountScreen()" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition transform active:scale-95 flex items-center justify-center gap-3 text-lg">
+                        <i class="fa-solid fa-expand"></i> Payment by Scan (Start)
+                    </button>
+
+                    <div class="p-3 bg-slate-900 rounded-lg border border-slate-800 text-left flex items-center gap-3">
+                        <i class="fa-solid fa-circle-info text-cyan-400"></i>
+                        <span class="text-xs text-slate-400">Supports dual-factor authentication (MPIN & Face Biometrics) for maximum security.</span>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: Amount Selection Screen -->
+                <div id="viewAmount" class="hidden text-center space-y-6 w-full max-w-md">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Select Withdrawal Amount</h3>
+                        <p class="text-xs text-slate-400">Choose a quick amount or enter a custom value</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="selectAmount(500)" class="py-3 px-4 bg-slate-800 hover:bg-emerald-600/30 hover:border-emerald-500 text-white font-bold rounded-xl border border-slate-700 transition">₹500</button>
+                        <button onclick="selectAmount(1000)" class="py-3 px-4 bg-slate-800 hover:bg-emerald-600/30 hover:border-emerald-500 text-white font-bold rounded-xl border border-slate-700 transition">₹1,000</button>
+                        <button onclick="selectAmount(2000)" class="py-3 px-4 bg-slate-800 hover:bg-emerald-600/30 hover:border-emerald-500 text-white font-bold rounded-xl border border-slate-700 transition">₹2,000</button>
+                        <button onclick="selectAmount(5000)" class="py-3 px-4 bg-slate-800 hover:bg-emerald-600/30 hover:border-emerald-500 text-white font-bold rounded-xl border border-slate-700 transition">₹5,000</button>
+                    </div>
+
+                    <div class="relative">
+                        <span class="absolute left-4 top-3.5 text-slate-400 font-bold">₹</span>
+                        <input id="customAmountInput" type="number" placeholder="Or enter custom amount" class="w-full pl-8 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold focus:outline-none focus:border-emerald-500" />
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="goToWelcomeScreen()" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm">Cancel</button>
+                        <button onclick="confirmAmount()" class="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-md transition">Generate QR Code</button>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: Dynamic QR Code Screen -->
+                <div id="viewQR" class="hidden text-center space-y-4 w-full max-w-md">
+                    <div class="flex justify-between items-center bg-slate-900 px-4 py-2 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400">Withdrawal Amount:</span>
+                        <span id="qrAmountDisplay" class="font-bold text-emerald-400 text-lg">₹500</span>
+                    </div>
+
+                    <!-- QR Box with Countdown -->
+                    <div class="relative inline-block p-4 bg-white rounded-2xl shadow-xl">
+                        <img id="qrImage" src="" alt="Dynamic QR Code" class="w-56 h-56 mx-auto object-contain" />
+                        <div id="qrExpiredOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-4">
+                            <i class="fa-solid fa-clock-rotate-left text-rose-500 text-3xl mb-2"></i>
+                            <p class="text-white font-bold text-sm">QR Code Expired</p>
+                            <p class="text-xs text-slate-400 mb-3 text-center">For security, QR codes expire in 60s.</p>
+                            <button onclick="refreshQRCode()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs flex items-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> Refresh QR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Countdown & Security Constraints Info -->
+                    <div class="flex items-center justify-between px-2">
+                        <div class="flex items-center gap-2">
+                            <div class="relative w-9 h-9 flex items-center justify-center">
+                                <svg class="w-9 h-9">
+                                    <circle stroke="#334155" stroke-width="3" fill="transparent" r="15" cx="18" cy="18" />
+                                    <circle id="countdownRing" class="progress-ring__circle" stroke="#10b981" stroke-width="3" stroke-linecap="round" fill="transparent" r="15" cx="18" cy="18" />
+                                </svg>
+                                <span id="countdownText" class="absolute text-[11px] font-bold text-white">60s</span>
+                            </div>
+                            <span class="text-xs text-slate-400">Valid for 60 seconds</span>
+                        </div>
+
+                        <!-- Attempt Badge: Max 3 -->
+                        <div id="attemptBadge" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-cyan-300">
+                            Attempt: 1 / 3
+                        </div>
+                    </div>
+
+                    <!-- Manual Refresh & Cancel -->
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="goToWelcomeScreen()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg">Cancel Transaction</button>
+                        <button id="btnManualRefresh" onclick="refreshQRCode()" class="flex-1 py-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> Regenerate QR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: Dispensing Cash Animation -->
+                <div id="viewDispensing" class="hidden text-center space-y-6 w-full max-w-md py-8">
+                    <div class="relative w-40 h-28 mx-auto bg-slate-900 border-2 border-emerald-500/50 rounded-xl flex items-center justify-center overflow-hidden">
+                        <div class="absolute inset-x-2 top-0 h-2 bg-emerald-500/30 rounded-b"></div>
+                        <!-- Animated Cash Bill -->
+                        <div class="bill-animation w-32 h-16 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-lg shadow-lg border border-emerald-300 text-white font-mono font-bold flex items-center justify-between px-3">
+                            <span class="text-xs">₹</span>
+                            <span id="dispenseAmountText" class="text-sm font-extrabold">₹500</span>
+                            <span class="text-[10px] bg-emerald-800 px-1 rounded">CASH</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-black text-emerald-400 animate-pulse">Dispensing Cash...</h3>
+                        <p class="text-slate-400 text-xs mt-1">Please collect your cash from the slot below.</p>
+                    </div>
+
+                    <div id="receiptBox" class="p-4 bg-white text-slate-900 rounded-xl text-left font-mono text-xs space-y-1.5 shadow-xl max-w-xs mx-auto border border-slate-300">
+                        <div class="text-center font-bold border-b pb-1">CAMPUS SMART BANK - ATM RECEIPT</div>
+                        <div class="flex justify-between"><span>Txn ID:</span><span id="rcptTxId" class="font-semibold">TXN_123456</span></div>
+                        <div class="flex justify-between"><span>Amount:</span><span id="rcptAmount" class="font-bold text-emerald-700">₹500.00</span></div>
+                        <div class="flex justify-between"><span>Method:</span><span>Cardless QR + 2FA</span></div>
+                        <div class="flex justify-between"><span>User:</span><span id="rcptUser">Student</span></div>
+                        <div class="text-center text-[10px] text-slate-500 pt-2 border-t">Thank you for banking with us!</div>
+                    </div>
+
+                    <button onclick="goToWelcomeScreen()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-xs">
+                        Finished / Return to Home
+                    </button>
+                </div>
+
+                <!-- VIEW 5: Lockout Screen (Exceeded 3 attempts) -->
+                <div id="viewLocked" class="hidden text-center space-y-4 w-full max-w-md py-8">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-500 flex items-center justify-center text-3xl">
+                        <i class="fa-solid fa-shield-xmark"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">Session Terminated</h3>
+                    <p class="text-xs text-rose-300/90 leading-relaxed px-4">
+                        Security Alert: Maximum 3 dynamic QR generations reached. This session has been cancelled to protect against unauthorized access.
+                    </p>
+                    <button onclick="goToWelcomeScreen()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl">
+                        Start New Session
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- ATM Bottom Bar -->
+            <div class="border-t border-slate-800 pt-3 flex justify-between text-[11px] text-slate-500">
+                <span>FastAPI + WebSockets Synchronized</span>
+                <span>Security Engine: 60s Dynamic TTL</span>
+            </div>
+        </div>
+
+        <!-- Right Side: Physical ATM Hardware Panel (Simulated Cash Slot, Card Slot & Keypad) -->
+        <div class="w-full md:w-72 bg-neutral-900 border-t md:border-t-0 md:border-l border-neutral-700 p-6 flex flex-col justify-between space-y-6">
+            <!-- Simulated Cash Dispenser Slot -->
+            <div>
+                <span class="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-1">Cash Dispenser Shutter</span>
+                <div id="physicalSlot" class="h-10 bg-neutral-950 border-2 border-neutral-800 rounded-lg flex items-center justify-center relative overflow-hidden transition-all duration-500">
+                    <div id="shutterDoor" class="w-full h-full bg-neutral-800 border-b-2 border-neutral-600 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                        SHUTTER CLOSED
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulated Card Slot (Notice) -->
+            <div class="p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                <span class="text-[10px] uppercase font-mono text-slate-400 block mb-1">Card Slot</span>
+                <div class="h-3 bg-neutral-800 rounded-full border border-neutral-700 relative">
+                    <span class="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-emerald-500"></span>
+                </div>
+                <p class="text-[10px] text-emerald-400/80 mt-1 font-mono">Cardless Mode Active (No Card Required)</p>
+            </div>
+
+            <!-- ATM Keypad Simulator -->
+            <div class="bg-neutral-950 p-3 rounded-2xl border border-neutral-800">
+                <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold font-mono">
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">1</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">2</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">3</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">4</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">5</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">6</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">7</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">8</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">9</div>
+                    <div class="py-2.5 bg-rose-900/60 text-rose-300 rounded shadow">CANCEL</div>
+                    <div class="py-2.5 bg-neutral-800 text-slate-300 rounded shadow">0</div>
+                    <div class="py-2.5 bg-emerald-900/60 text-emerald-300 rounded shadow">ENTER</div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="/mobile" target="_blank" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold underline">
+                    Open Mobile App in New Tab ↗
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Web Audio Synthesizer for ATM Beeps & Cash Dispensing Sound -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playChime(freq = 880, duration = 0.15) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        // --- App State ---
+        let currentSessionId = null;
+        let selectedAmount = 500;
+        let currentAttempt = 1;
+        let countdownTimer = null;
+        let secondsRemaining = 60;
+        let socket = null;
+
+        // --- View Switching ---
+        function showView(viewId) {
+            ['viewWelcome', 'viewAmount', 'viewQR', 'viewDispensing', 'viewLocked'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function goToWelcomeScreen() {
+            clearInterval(countdownTimer);
+            if (socket) { socket.close(); socket = null; }
+            currentSessionId = null;
+            document.getElementById('shutterDoor').textContent = 'SHUTTER CLOSED';
+            document.getElementById('shutterDoor').className = 'w-full h-full bg-neutral-800 border-b-2 border-neutral-600 flex items-center justify-center text-[10px] text-slate-400 font-mono';
+            showView('viewWelcome');
+        }
+
+        function goToAmountScreen() {
+            playChime(600);
+            showView('viewAmount');
+        }
+
+        function selectAmount(amt) {
+            playChime(750);
+            selectedAmount = amt;
+            document.getElementById('customAmountInput').value = amt;
+        }
+
+        async function confirmAmount() {
+            const customVal = parseFloat(document.getElementById('customAmountInput').value);
+            if (customVal && customVal > 0) {
+                selectedAmount = customVal;
+            }
+            if (selectedAmount < 100 || selectedAmount > 10000) {
+                alert("Please enter an amount between ₹100 and ₹10,000");
+                return;
+            }
+
+            playChime(800);
+            await createQRSession();
+        }
+
+        // --- Step 1: Request Dynamic QR from Backend ---
+        async function createQRSession() {
+            try {
+                const res = await fetch('/api/atm/session/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        atm_code: 'ATM_CAMPUS_01',
+                        amount: selectedAmount
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail || "Error generating QR");
+                    return;
+                }
+
+                currentSessionId = data.session_id;
+                currentAttempt = data.attempts_count;
+                document.getElementById('qrAmountDisplay').textContent = `₹${selectedAmount.toLocaleString('en-IN')}`;
+                document.getElementById('qrImage').src = data.qr_image;
+                document.getElementById('qrExpiredOverlay').classList.add('hidden');
+                document.getElementById('attemptBadge').textContent = `Attempt: ${currentAttempt} / ${data.max_attempts}`;
+
+                showView('viewQR');
+                startCountdown(data.validity_seconds);
+                connectWebSocket(data.session_id);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to communicate with ATM backend.");
+            }
+        }
+
+        // --- Step 2: Refresh Dynamic QR (Security: Max 3 Attempts) ---
+        async function refreshQRCode() {
+            if (!currentSessionId) return;
+            try {
+                const res = await fetch('/api/atm/session/refresh-qr', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ session_id: currentSessionId })
+                });
+                const data = await res.json();
+
+                if (res.status === 429) {
+                    // Exceeded 3 attempts lock
+                    playChime(300, 0.4);
+                    showView('viewLocked');
+                    return;
+                }
+
+                if (!res.ok) {
+                    alert(data.detail || "Refresh failed");
+                    return;
+                }
+
+                playChime(900);
+                currentAttempt = data.attempts_count;
+                document.getElementById('qrImage').src = data.qr_image;
+                document.getElementById('qrExpiredOverlay').classList.add('hidden');
+                document.getElementById('attemptBadge').textContent = `Attempt: ${currentAttempt} / ${data.max_attempts}`;
+                startCountdown(data.validity_seconds);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- Dynamic 60s Countdown Timer Animation ---
+        function startCountdown(totalSeconds) {
+            clearInterval(countdownTimer);
+            secondsRemaining = totalSeconds;
+            const ring = document.getElementById('countdownRing');
+            const circumference = 2 * Math.PI * 15;
+            ring.style.strokeDasharray = `${circumference} ${circumference}`;
+
+            function updateUI() {
+                document.getElementById('countdownText').textContent = `${secondsRemaining}s`;
+                const offset = circumference - (secondsRemaining / totalSeconds) * circumference;
+                ring.style.strokeDashoffset = offset;
+
+                if (secondsRemaining <= 15) {
+                    ring.setAttribute('stroke', '#ef4444'); // Red warning
+                } else if (secondsRemaining <= 30) {
+                    ring.setAttribute('stroke', '#f59e0b'); // Yellow warning
+                } else {
+                    ring.setAttribute('stroke', '#10b981'); // Green normal
+                }
+
+                if (secondsRemaining <= 0) {
+                    clearInterval(countdownTimer);
+                    document.getElementById('qrExpiredOverlay').classList.remove('hidden');
+                }
+                secondsRemaining--;
+            }
+
+            updateUI();
+            countdownTimer = setInterval(updateUI, 1000);
+        }
+
+        // --- Real-Time Sync: WebSocket Connection to ATM ---
+        function connectWebSocket(sessionId) {
+            if (socket) socket.close();
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${window.location.host}/ws/atm/${sessionId}`);
+
+            socket.onmessage = function(event) {
+                const msg = JSON.parse(event.data);
+                if (msg.event === 'DISPENSE_SUCCESS') {
+                    handleCashDispense(msg);
+                }
+            };
+        }
+
+        // --- Dispense Cash & Receipt Printing ---
+        function handleCashDispense(msg) {
+            clearInterval(countdownTimer);
+            playChime(1046, 0.3); // High confirmation beep
+            setTimeout(() => playChime(1318, 0.4), 250);
+
+            // Animate Physical ATM shutter open
+            const shutter = document.getElementById('shutterDoor');
+            shutter.textContent = 'DISPENSING CASH...';
+            shutter.className = 'w-full h-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold font-mono animate-pulse';
+
+            document.getElementById('dispenseAmountText').textContent = `₹${msg.amount.toLocaleString('en-IN')}`;
+            document.getElementById('rcptTxId').textContent = msg.tx_id;
+            document.getElementById('rcptAmount').textContent = `₹${msg.amount.toFixed(2)}`;
+            document.getElementById('rcptUser').textContent = msg.user_name;
+
+            showView('viewDispensing');
+        }
+    </script>
+</body>
+</html>
+
